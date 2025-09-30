@@ -4,7 +4,7 @@ import { About } from "@/components/About";
 import { Services } from "@/components/Services";
 import { Gallery } from "@/components/Gallery";
 import { Reviews } from "@/components/Reviews";
-import { BookingForm } from "@/components/BookingForm";
+import BookingForm from "@/components/BookingForm"; 
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
