@@ -3,27 +3,27 @@ import { X } from "lucide-react";
 
 const galleryImages = [
   {
-    url: "https://sun9-29.userapi.com/s/v1/ig2/LP1Q96xvEQxemeMWenluR-rkRtqGJ0GmkPUvmZsipNvjB0xlS0J1u0tqXktm2G-B1Rn-7Od67HOX_ISlPHqt3A4x.jpg?quality=95&as=1079x1920",
+    url: "/images/I3EOVycCnk_vuX0z-IAhw9sp-yBHiPIMo7PyMsz09-iVU33xFsqSd89w4CcxakhFO5D8xz3jR-tW_88rNwsGenlE.jpg",
     alt: "Перманентный макияж бровей"
   },
   {
-    url: "https://sun9-76.userapi.com/s/v1/ig2/RaEDIhGzCYrWeyVZduTWKYwEF8KUtP3jWxe707hFprVUSJjb9WQXasNR94poxD-yiC2I-WJf8Z7wj4T4Ky1u_UNo.jpg?quality=95&as=1079x1920",
-    alt: "Результат перманентного макияжа губ"
+    url: "/images/iJe-nweoyeduWUIq2rKjDe-_1tsFR2MBgWAp8Nj7J3jzCDDJHKzVUry3maLl3lm32pn_5qTnHexgDXZUHWzfr2Lt.jpg",
+    alt: "Перманентный макияж глаз - до и после"
   },
   {
-    url: "https://sun9-2.userapi.com/s/v1/ig2/QU8oUvNsH1m8mtlsjk4Eyr28uLvXskCTNizlN2lj2TYgQQwwrvv3hfppfezrOX88JsRMlpKAK95DQIfyrlt8g15h.jpg?quality=95&as=1079x1920",
-    alt: "Камуфляж темных кругов под глазами"
+    url: "/images/I3EOVycCnk_vuX0z-IAhw9sp-yBHiPIMo7PyMsz09-iVU33xFsqSd89w4CcxakhFO5D8xz3jR-tW_88rNwsGenlE.jpg",
+    alt: "Перманентный макияж губ - до и после"
   },
   {
-    url: "https://sun9-50.userapi.com/s/v1/ig2/FwK55HycKwIRZ91h7L84CWwDy_6N339PkNn7d29R_Ef_c3QUi8j94dJsI084nUhcJXTzMyKKPZNah6W7VAtOezEe.jpg?quality=95&as=1079x1920",
-    alt: "Перманентный макияж - до и после"
+    url: "/images/3WzrG8gty2_Mz2XftnAYPul1IF_TYCCsIy7vS98Jsxkn6uA2KJ8nEWXj1NHJz4YSK-B9YiC20NOc3Lhx-b6J_2l1.jpg",
+    alt: "Перманентный макияж бровей - до и после"
   },
   {
-    url: "https://sun6-21.userapi.com/impg/fULaGxhl1H9Z2ELD9JlNNiYa8Z77fWXyIX0Fgg/U_QvC_ac4wY.jpg?size=1080x1920&quality=95",
-    alt: "Микроблейдинг бровей"
+    url: "/images/nei1EqRY69LwvHuj9eOyoVBBgtHSxi5g83Eu_z0D0QtUBLf36-R-XvQ7utqgm3sdP_r0sKKu6xvZMMTmxnq35Xzz.jpg",
+    alt: "Микроблейдинг бровей - до и после"
   },
   {
-    url: "https://sun6-20.userapi.com/impg/GyxOcwfCPX91FBK5aq1NP3WOxAqfHbV4qC9GPw/Cb4d99-2Vhc.jpg?size=1080x1920&quality=95",
+    url: "/images/rPFJ06euwR7nmCio81t4gNwB8MDTSONVIz3uS-OB5HJ_ghbbQD6ovxIyNjvkI_L2e7ourSw3a-DPeVfGRehwgDzi.jpg",
     alt: "Камуфляж темных кругов"
   }
 ];

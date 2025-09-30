@@ -22,7 +22,7 @@ export const BookingForm = () => {
     setIsLoading(true);
 
     // Валидация данных
-    if (!formData.name.trim() || !formData.phone.trim()) {
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.service.trim()) {
       toast({
         title: "Ошибка",
         description: "Пожалуйста, заполните все обязательные поля",
@@ -33,9 +33,31 @@ export const BookingForm = () => {
     }
 
     try {
-      // Здесь будет интеграция с Telegram Bot API
-      // Пока показываем уведомление об успехе
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Формируем текст сообщения для Telegram
+      const messageText = `
+🔔 Новая заявка!
+👤 Имя: ${formData.name}
+📱 Телефон: ${formData.phone}
+💅 Услуга: ${formData.service}
+💬 Комментарий: ${formData.message || "Не указан"}
+      `.trim();
+
+      // Отправляем сообщение в Telegram
+      const response = await fetch(`https://api.telegram.org/bot8317782207:AAE-_2JU1Ak4vEXi-s2MGMjWoZcYefCvBDw/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: '8317782207',
+          text: messageText,
+          parse_mode: 'HTML'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке сообщения в Telegram');
+      }
 
       toast({
         title: "Заявка отправлена!",
@@ -49,6 +71,7 @@ export const BookingForm = () => {
         message: ""
       });
     } catch (error) {
+      console.error('Ошибка:', error);
       toast({
         title: "Ошибка",
         description: "Не удалось отправить заявку. Попробуйте позже",
@@ -96,12 +119,13 @@ export const BookingForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="service">Интересующая процедура</Label>
+                <Label htmlFor="service">Интересующая процедура *</Label>
                 <Input
                   id="service"
                   placeholder="Например: Микроблейдинг бровей"
                   value={formData.service}
                   onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                  required
                   className="border-border"
                 />
               </div>

@@ -48,6 +48,12 @@ export const Services = () => {
             <h2 className="text-4xl sm:text-5xl font-light text-foreground">Услуги и цены</h2>
             <p className="text-muted-foreground text-lg">Современные техники перманентного макияжа</p>
           </div>
+          
+          <div className="mb-12">
+            <div className="max-w-3xl mx-auto rounded-xl overflow-hidden shadow-xl">
+              </div>
+            <h3 className="text-center text-xl font-medium mt-4"></h3>
+          </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service, index) => (

@@ -41,12 +41,12 @@ export const About = () => {
 
             <div className="relative">
               <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
-                <img 
-                  src="https://sun6-23.userapi.com/s/v1/ig2/4r5o73Dls-psIAl-LN69wk_BcWQ5zex6az0TEqDDzIFJtMIxM9FhHd_KB_cclwwphdvjUN73q2l0Bav1v-PD_pHR.jpg?quality=95&crop=1,343,1439,1439&as=1080x1080"
-                  alt="Елена Бородина - мастер перманентного макияжа"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+                  <img 
+                   src="/images/Dc3w78lWCag1mN_-chS68-BUc2lOs_WjaNzYiFl8apEElPhyVGWwut1hQUomTtvouzNkqJ9zXzt6VbAPHn5bhOv-.jpg"
+                   alt="Елена Бородина - мастер перманентного макияжа"
+                   className="w-full h-full object-cover"
+                  />
+                </div>
               <div className="absolute -bottom-6 -right-6 bg-primary/10 rounded-3xl w-48 h-48 -z-10" />
             </div>
           </div>
