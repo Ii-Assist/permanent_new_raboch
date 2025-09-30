@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function BookingForm() {
+export function BookingForm() {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -67,4 +67,3 @@ export default function BookingForm() {
     </form>
   );
 }
-export default BookingForm;

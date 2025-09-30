@@ -4,10 +4,10 @@ import { About } from "@/components/About";
 import { Services } from "@/components/Services";
 import { Gallery } from "@/components/Gallery";
 import { Reviews } from "@/components/Reviews";
-import { BookingForm } from "@/src/components/ui/BookingForm";
+import { BookingForm } from "@/components/BookingForm";
 import { Footer } from "@/components/Footer";
 
-const Index = () => {
+export default function Index() {
   return (
     <div className="min-h-screen">
       <Header />
@@ -20,6 +20,4 @@ const Index = () => {
       <Footer />
     </div>
   );
-};
-
-export default Index;
+}
