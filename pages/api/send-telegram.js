@@ -1,106 +1,104 @@
-export default async function handler(req, res) {
-  // Включаем CORS для всех источников
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+/**
+ * API-обработчик для отправки сообщений в Telegram
+ * 
+ * Этот файл обрабатывает POST-запросы с данными формы и отправляет их в Telegram
+ * через Bot API. Он проверяет наличие необходимых переменных окружения, валидирует
+ * входящие данные и обрабатывает ошибки.
+ * 
+ * Переменные окружения:
+ * - TELEGRAM_BOT_TOKEN: Токен бота Telegram (получается у @BotFather)
+ * - TELEGRAM_CHAT_ID: ID чата или канала для отправки сообщений
+ */
 
-  // Обработка OPTIONS запроса (preflight)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+export default async function handler(req, res) {
+  // Разрешаем только POST-запросы
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Метод не разрешен. Используйте POST-запрос.' 
+    });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // Проверяем наличие переменных окружения
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+    console.error('Ошибка: Отсутствуют переменные окружения TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID');
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка конфигурации сервера. Пожалуйста, свяжитесь с администратором.' 
+    });
   }
 
   try {
-    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-
-    // Проверка наличия переменных окружения
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-      console.error("Отсутствуют переменные окружения: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID");
-      return res.status(500).json({ 
-        error: "Ошибка конфигурации сервера: отсутствуют необходимые переменные окружения"
-      });
-    }
-
-    // Проверяем, что req.body существует
+    // Проверяем наличие тела запроса
     if (!req.body) {
-      return res.status(400).json({ error: "Отсутствуют данные запроса" });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Отсутствуют данные в запросе' 
+      });
     }
 
     const { name, phone, service, message } = req.body;
 
-    // Проверка обязательных полей
+    // Валидация обязательных полей
     if (!name || !phone || !service) {
       return res.status(400).json({ 
-        error: "Не заполнены обязательные поля"
+        success: false, 
+        error: 'Пожалуйста, заполните все обязательные поля (имя, телефон, услуга)' 
       });
     }
 
-    const text = `
-🔔 Новая заявка!
-👤 Имя: ${name}
-📱 Телефон: ${phone}
-💅 Услуга: ${service}
-💬 Комментарий: ${message || "Не указан"}
+    // Формируем текст сообщения с HTML-форматированием
+    const messageText = `
+<b>Новая заявка с сайта!</b>
+
+<b>Имя:</b> ${name}
+<b>Телефон:</b> ${phone}
+<b>Услуга:</b> ${service}
+${message ? `<b>Сообщение:</b> ${message}` : ''}
+
+<i>Отправлено через форму на сайте</i>
 `.trim();
 
-    console.log("Отправка сообщения в Telegram...");
-    
-    try {
-      const tgResponse = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text,
-            parse_mode: "HTML"
-          }),
-        }
-      );
-
-      // Проверяем статус ответа перед парсингом JSON
-      if (!tgResponse.ok) {
-        const errorText = await tgResponse.text();
-        console.error("Ошибка Telegram API:", tgResponse.status, errorText);
-        
-        let errorMessage = "Ошибка Telegram API";
-        try {
-          // Пытаемся распарсить ответ как JSON
-          if (errorText.trim().startsWith('{')) {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.description || errorMessage;
-          }
-        } catch (e) {
-          console.error("Не удалось распарсить ответ как JSON:", e);
-        }
-        
-        return res.status(500).json({ error: errorMessage });
+    // Отправляем сообщение в Telegram
+    const telegramResponse = await fetch(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
       }
-      
-      // Парсим JSON только для успешных ответов
-      const responseData = await tgResponse.json();
-      
-      console.log("Сообщение успешно отправлено:", responseData);
-      return res.status(200).json({ ok: true });
-    } catch (tgError) {
-      console.error("Ошибка при запросе к Telegram API:", tgError);
+    );
+
+    // Получаем ответ от Telegram API
+    const telegramData = await telegramResponse.json();
+
+    // Проверяем успешность отправки
+    if (!telegramData.ok) {
+      console.error('Ошибка Telegram API:', telegramData);
       return res.status(500).json({ 
-        error: "Ошибка при отправке сообщения в Telegram"
+        success: false, 
+        error: `Ошибка при отправке в Telegram: ${telegramData.description || 'Неизвестная ошибка'}` 
       });
     }
+
+    // Возвращаем успешный ответ
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Сообщение успешно отправлено в Telegram' 
+    });
+
   } catch (error) {
-    console.error("Ошибка при обработке запроса:", error);
+    console.error('Ошибка при обработке запроса:', error);
     return res.status(500).json({ 
-      error: "Произошла ошибка при обработке запроса"
+      success: false, 
+      error: 'Произошла ошибка при обработке запроса' 
     });
   }
 }

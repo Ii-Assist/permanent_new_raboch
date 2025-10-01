@@ -16,35 +16,22 @@ export function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
-  // Функция для форматирования номера телефона в российском формате
+  // Функция для форматирования номера телефона
   const formatPhoneNumber = (value: string) => {
-    // Если пользователь удаляет символы и поле становится пустым, возвращаем пустую строку
-    if (value === '') {
-      return '';
-    }
-    
     // Удаляем все нецифровые символы
-    let phoneNumber = value.replace(/\D/g, '');
+    const phoneNumber = value.replace(/\D/g, "");
     
-    // Если номер начинается с 7 или 8, удаляем эту цифру, так как мы всегда добавляем +7
-    if (phoneNumber.startsWith('7') || phoneNumber.startsWith('8')) {
-      phoneNumber = phoneNumber.substring(1);
-    }
-    
-    // Ограничиваем длину до 10 цифр (без учета кода страны)
-    phoneNumber = phoneNumber.substring(0, 10);
-    
-    // Форматируем номер в российском формате
-    if (phoneNumber.length === 0) {
-      return '+7';
-    } else if (phoneNumber.length <= 3) {
-      return `+7 (${phoneNumber}`;
-    } else if (phoneNumber.length <= 6) {
-      return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    } else if (phoneNumber.length <= 8) {
-      return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
+    // Форматируем номер телефона в зависимости от длины
+    if (phoneNumber.length <= 1) {
+      return phoneNumber === "7" ? "+7" : phoneNumber === "8" ? "+7" : "+7" + phoneNumber;
+    } else if (phoneNumber.length <= 4) {
+      return "+7 (" + phoneNumber.substring(1, 4);
+    } else if (phoneNumber.length <= 7) {
+      return "+7 (" + phoneNumber.substring(1, 4) + ") " + phoneNumber.substring(4, 7);
+    } else if (phoneNumber.length <= 9) {
+      return "+7 (" + phoneNumber.substring(1, 4) + ") " + phoneNumber.substring(4, 7) + "-" + phoneNumber.substring(7, 9);
     } else {
-      return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 8)}-${phoneNumber.slice(8, 10)}`;
+      return "+7 (" + phoneNumber.substring(1, 4) + ") " + phoneNumber.substring(4, 7) + "-" + phoneNumber.substring(7, 9) + "-" + phoneNumber.substring(9, 11);
     }
   };
 
@@ -80,7 +67,7 @@ export function BookingForm() {
     try {
       console.log('Отправка данных формы:', formData);
       
-      // Используем стандартный API-роут Vercel
+      // Отправляем запрос на API-эндпоинт
       const response = await fetch("/api/send-telegram", {
         method: "POST",
         headers: {
@@ -90,47 +77,41 @@ export function BookingForm() {
         body: JSON.stringify(formData),
       });
 
+      // Обработка ответа
       let responseData;
-      const contentType = response.headers.get("content-type");
-      const isJson = contentType && contentType.includes("application/json");
-      
-      if (isJson) {
-        try {
-          responseData = await response.json();
-        } catch (jsonError) {
-          console.error('Ошибка при парсинге JSON:', jsonError);
-          const text = await response.text();
-          console.error('Текст ответа:', text);
-          throw new Error("Ошибка при обработке ответа сервера");
-        }
-      } else {
-        const text = await response.text();
-        console.error('Получен не JSON ответ:', text);
-        throw new Error("Сервер вернул неверный формат ответа");
+      try {
+        responseData = await response.json();
+      } catch (jsonError) {
+        console.error('Ошибка при парсинге JSON:', jsonError);
+        throw new Error('Не удалось обработать ответ сервера');
       }
-
-      // Проверяем статус ответа
-      if (!response.ok) {
-        const errorMessage = responseData?.error || "Ошибка при отправке заявки";
-        console.error('Ошибка ответа API:', response.status, errorMessage);
+      
+      if (response.ok && responseData.success) {
+        // Успешная отправка
+        toast({
+          title: "Успех!",
+          description: responseData.message || "Ваша заявка успешно отправлена. Мы свяжемся с вами в ближайшее время.",
+          variant: "default",
+        });
+        
+        // Сбрасываем форму
+        setFormData({
+          name: "",
+          phone: "",
+          service: "",
+          message: "",
+        });
+        setPrivacyAccepted(false);
+      } else {
+        // Ошибка от сервера
+        const errorMessage = responseData?.error || 'Произошла ошибка при отправке заявки';
         throw new Error(errorMessage);
       }
-      
-      console.log('Успешный ответ:', responseData);
-      
-      toast({
-        title: "Успешно!",
-        description: "Ваша заявка успешно отправлена",
-      });
-      
-      // Сбрасываем форму
-      setFormData({ name: "", phone: "", service: "", message: "" });
-      setPrivacyAccepted(false);
-    } catch (err) {
-      console.error('Ошибка при отправке:', err);
+    } catch (error) {
+      console.error('Ошибка при отправке формы:', error);
       toast({
         title: "Ошибка!",
-        description: err instanceof Error ? err.message : "Не удалось отправить заявку",
+        description: error instanceof Error ? error.message : 'Произошла ошибка при отправке заявки',
         variant: "destructive",
       });
     } finally {
