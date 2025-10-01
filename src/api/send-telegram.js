@@ -14,6 +14,11 @@ export async function sendTelegramMessage(formData) {
     throw new Error("Ошибка конфигурации сервера: отсутствуют необходимые переменные окружения");
   }
 
+  // Проверяем, что formData существует
+  if (!formData) {
+    throw new Error("Отсутствуют данные формы");
+  }
+
   const { name, phone, service, message } = formData;
 
   // Проверка обязательных полей
@@ -31,14 +36,15 @@ export async function sendTelegramMessage(formData) {
 
   try {
     console.log("Отправка сообщения в Telegram...");
-    console.log("URL:", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN.substring(0, 5)}***/sendMessage`);
-    console.log("Chat ID:", TELEGRAM_CHAT_ID);
     
     const tgResponse = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
           text,
@@ -47,14 +53,29 @@ export async function sendTelegramMessage(formData) {
       }
     );
 
-    const responseData = await tgResponse.json().catch(() => null);
-    
+    // Проверяем статус ответа перед парсингом JSON
     if (!tgResponse.ok) {
-      console.error("Ошибка Telegram API:", tgResponse.status, responseData);
-      throw new Error(`Ошибка Telegram API: ${tgResponse.status} ${JSON.stringify(responseData)}`);
+      const errorText = await tgResponse.text();
+      console.error("Ошибка Telegram API:", tgResponse.status, errorText);
+      
+      let errorMessage = "Ошибка Telegram API";
+      try {
+        // Пытаемся распарсить ответ как JSON
+        if (errorText.trim().startsWith('{')) {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.description || errorMessage;
+        }
+      } catch (e) {
+        console.error("Не удалось распарсить ответ как JSON:", e);
+      }
+      
+      throw new Error(errorMessage);
     }
-
-    console.log("Сообщение успешно отправлено");
+    
+    // Парсим JSON только для успешных ответов
+    const responseData = await tgResponse.json();
+    
+    console.log("Сообщение успешно отправлено:", responseData);
     return { ok: true };
   } catch (error) {
     console.error("Детали ошибки:", error.message);

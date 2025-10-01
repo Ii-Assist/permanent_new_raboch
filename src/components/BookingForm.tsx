@@ -65,44 +65,65 @@ export function BookingForm() {
       return;
     }
     
+    // Проверка заполнения обязательных полей
+    if (!formData.name || !formData.phone || !formData.service) {
+      toast({
+        title: "Ошибка!",
+        description: "Пожалуйста, заполните все обязательные поля",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
+      console.log('Отправка данных формы:', formData);
+      
       // Используем стандартный API-роут Vercel
       const response = await fetch("/api/send-telegram", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(formData),
       });
 
-      // Проверяем статус ответа перед попыткой парсинга JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка ответа API:', response.status, errorText);
-        
-        // Пытаемся распарсить JSON только если ответ похож на JSON
-        let errorMessage = "Ошибка при отправке";
+      let responseData;
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+      
+      if (isJson) {
         try {
-          if (errorText.trim().startsWith('{')) {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error || errorMessage;
-          }
-        } catch (e) {
-          console.error('Не удалось распарсить ответ как JSON:', e);
+          responseData = await response.json();
+        } catch (jsonError) {
+          console.error('Ошибка при парсинге JSON:', jsonError);
+          const text = await response.text();
+          console.error('Текст ответа:', text);
+          throw new Error("Ошибка при обработке ответа сервера");
         }
-        
+      } else {
+        const text = await response.text();
+        console.error('Получен не JSON ответ:', text);
+        throw new Error("Сервер вернул неверный формат ответа");
+      }
+
+      // Проверяем статус ответа
+      if (!response.ok) {
+        const errorMessage = responseData?.error || "Ошибка при отправке заявки";
+        console.error('Ошибка ответа API:', response.status, errorMessage);
         throw new Error(errorMessage);
       }
       
-      // Парсим JSON только для успешных ответов
-      const data = await response.json();
+      console.log('Успешный ответ:', responseData);
       
       toast({
         title: "Успешно!",
         description: "Ваша заявка успешно отправлена",
       });
+      
+      // Сбрасываем форму
       setFormData({ name: "", phone: "", service: "", message: "" });
       setPrivacyAccepted(false);
     } catch (err) {
