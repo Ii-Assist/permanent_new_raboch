@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"node src/api/index.js\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api": "node src/api/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -43,8 +44,12 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.6.1",
     "embla-carousel-react": "^8.6.0",
+    "express": "^4.21.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",

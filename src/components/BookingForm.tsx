@@ -24,8 +24,13 @@ export function BookingForm() {
     // Форматируем номер в российском формате
     if (phoneNumber.length === 0) {
       return '';
-    } else if (phoneNumber.length <= 1) {
-      return `+7 (${phoneNumber}`;
+    } else if (phoneNumber.length === 1) {
+      // Если введена только одна цифра и это 7, то не добавляем префикс +7
+      if (phoneNumber === '7') {
+        return '+7 (';
+      } else {
+        return `+7 (${phoneNumber}`;
+      }
     } else if (phoneNumber.length <= 4) {
       return `+7 (${phoneNumber.slice(0, 3)}`;
     } else if (phoneNumber.length <= 7) {
@@ -38,6 +43,12 @@ export function BookingForm() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Если пользователь удаляет символы и поле становится пустым, сбрасываем значение
+    if (e.target.value === '') {
+      setFormData({ ...formData, phone: '' });
+      return;
+    }
+    
     const formattedPhone = formatPhoneNumber(e.target.value);
     setFormData({ ...formData, phone: formattedPhone });
   };
@@ -57,7 +68,11 @@ export function BookingForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/send-telegram", {
+      // Используем прямой URL для API-сервера
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      console.log('Отправка запроса на:', `${apiUrl}/api/send-telegram`);
+      
+      const response = await fetch(`${apiUrl}/api/send-telegram`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,8 +80,11 @@ export function BookingForm() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error("Ошибка при отправке");
+        console.error('Ошибка ответа API:', data);
+        throw new Error(data.details || "Ошибка при отправке");
       }
       
       toast({
@@ -76,10 +94,10 @@ export function BookingForm() {
       setFormData({ name: "", phone: "", service: "", message: "" });
       setPrivacyAccepted(false);
     } catch (err) {
-      console.error(err);
+      console.error('Ошибка при отправке:', err);
       toast({
         title: "Ошибка!",
-        description: "Не удалось отправить заявку",
+        description: err instanceof Error ? err.message : "Не удалось отправить заявку",
         variant: "destructive",
       });
     } finally {
@@ -147,7 +165,7 @@ export function BookingForm() {
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Я согласен на обработку персональных данных в соответствии с{" "}
-                <a href="#" className="text-primary hover:underline">
+                <a href="/privacy" className="text-primary hover:underline">
                   Политикой конфиденциальности
                 </a>
               </label>
