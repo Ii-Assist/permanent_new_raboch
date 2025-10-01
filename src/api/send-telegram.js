@@ -42,6 +42,7 @@ export async function sendTelegramMessage(formData) {
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
           text,
+          parse_mode: "HTML"
         }),
       }
     );

@@ -78,7 +78,4 @@ export default async function handler(req, res) {
       error: "Произошла ошибка при отправке сообщения"
     });
   }
-      error: "Ошибка при отправке сообщения"
-    });
-  }
 }

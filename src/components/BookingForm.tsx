@@ -77,12 +77,27 @@ export function BookingForm() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-      
+      // Проверяем статус ответа перед попыткой парсинга JSON
       if (!response.ok) {
-        console.error('Ошибка ответа API:', data);
-        throw new Error(data.error || "Ошибка при отправке");
+        const errorText = await response.text();
+        console.error('Ошибка ответа API:', response.status, errorText);
+        
+        // Пытаемся распарсить JSON только если ответ похож на JSON
+        let errorMessage = "Ошибка при отправке";
+        try {
+          if (errorText.trim().startsWith('{')) {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || errorMessage;
+          }
+        } catch (e) {
+          console.error('Не удалось распарсить ответ как JSON:', e);
+        }
+        
+        throw new Error(errorMessage);
       }
+      
+      // Парсим JSON только для успешных ответов
+      const data = await response.json();
       
       toast({
         title: "Успешно!",
