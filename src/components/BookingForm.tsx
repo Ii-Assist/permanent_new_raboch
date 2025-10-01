@@ -68,11 +68,8 @@ export function BookingForm() {
     setIsLoading(true);
 
     try {
-      // Используем прямой URL для API-сервера
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      console.log('Отправка запроса на:', `${apiUrl}/api/send-telegram`);
-      
-      const response = await fetch(`${apiUrl}/api/send-telegram`, {
+      // Используем стандартный API-роут Vercel
+      const response = await fetch("/api/send-telegram", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,7 +81,7 @@ export function BookingForm() {
       
       if (!response.ok) {
         console.error('Ошибка ответа API:', data);
-        throw new Error(data.details || "Ошибка при отправке");
+        throw new Error(data.error || "Ошибка при отправке");
       }
       
       toast({

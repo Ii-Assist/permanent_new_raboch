@@ -1,4 +1,15 @@
 export default async function handler(req, res) {
+  // Включаем CORS для всех источников
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  // Обработка OPTIONS запроса (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -10,8 +21,7 @@ export default async function handler(req, res) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     console.error("Отсутствуют переменные окружения: TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID");
     return res.status(500).json({ 
-      error: "Ошибка конфигурации сервера", 
-      details: "Отсутствуют необходимые переменные окружения" 
+      error: "Ошибка конфигурации сервера: отсутствуют необходимые переменные окружения"
     });
   }
 
@@ -20,8 +30,7 @@ export default async function handler(req, res) {
   // Проверка обязательных полей
   if (!name || !phone || !service) {
     return res.status(400).json({ 
-      error: "Не заполнены обязательные поля", 
-      details: { name: !name, phone: !phone, service: !service } 
+      error: "Не заполнены обязательные поля"
     });
   }
 
@@ -35,8 +44,6 @@ export default async function handler(req, res) {
 
   try {
     console.log("Отправка сообщения в Telegram...");
-    console.log("URL:", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN.substring(0, 5)}***/sendMessage`);
-    console.log("Chat ID:", TELEGRAM_CHAT_ID);
     
     const tgResponse = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -54,7 +61,9 @@ export default async function handler(req, res) {
     
     if (!tgResponse.ok) {
       console.error("Ошибка Telegram API:", tgResponse.status, responseData);
-      throw new Error(`Ошибка Telegram API: ${tgResponse.status} ${JSON.stringify(responseData)}`);
+      return res.status(500).json({ 
+        error: `Ошибка Telegram API: ${tgResponse.status}`
+      });
     }
 
     console.log("Сообщение успешно отправлено");
@@ -62,8 +71,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Детали ошибки:", error.message);
     return res.status(500).json({ 
-      error: "Ошибка при отправке", 
-      details: error.message 
+      error: "Ошибка при отправке сообщения"
     });
   }
 }
