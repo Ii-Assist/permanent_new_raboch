@@ -77,7 +77,7 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
 
     // Отправляем сообщение в Telegram
     const telegramResponse = await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN.trim()}/sendMessage`,
       {
         method: 'POST',
         headers: {
@@ -92,8 +92,26 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
       }
     );
 
-    // Получаем ответ от Telegram API
-    const telegramData = await telegramResponse.json();
+    // Получаем ответ в виде текста для диагностики
+    const responseText = await telegramResponse.text();
+    console.log('Ответ от Telegram API (текст):', responseText);
+    
+    // Пробуем распарсить JSON
+    let telegramData;
+    try {
+      telegramData = JSON.parse(responseText);
+      console.log('Ответ от Telegram API (JSON):', JSON.stringify(telegramData));
+    } catch (e) {
+      console.error('Ошибка парсинга JSON ответа:', e);
+      return Response.json(
+        { 
+          success: false, 
+          error: 'Невозможно распарсить ответ от Telegram API', 
+          rawResponse: responseText 
+        },
+        { status: 500 }
+      );
+    }
 
     // Проверяем успешность отправки
     if (!telegramData.ok) {
@@ -101,7 +119,8 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
       return Response.json(
         { 
           success: false, 
-          error: `Ошибка при отправке в Telegram: ${telegramData.description || 'Неизвестная ошибка'}` 
+          error: `Ошибка при отправке в Telegram: ${telegramData.description || 'Неизвестная ошибка'}`,
+          details: telegramData
         },
         { status: 500 }
       );

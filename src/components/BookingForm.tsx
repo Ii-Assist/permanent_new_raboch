@@ -109,9 +109,20 @@ export function BookingForm() {
       }
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
+      
+      // Улучшенная обработка ошибок
+      let errorMessage = 'Произошла ошибка при отправке заявки';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Для случаев, когда ошибка - это объект, но не instanceof Error
+        errorMessage = JSON.stringify(error);
+      }
+      
       toast({
-        title: "Ошибка!",
-        description: error instanceof Error ? error.message : 'Произошла ошибка при отправке заявки',
+        title: "Ошибка при отправке",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

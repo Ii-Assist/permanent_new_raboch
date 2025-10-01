@@ -11,6 +11,17 @@
  */
 
 export default async function handler(req, res) {
+  // Включаем расширенное логирование для диагностики
+  console.log('Получен запрос на /api/send-telegram:', {
+    method: req.method,
+    headers: req.headers,
+    hasBody: !!req.body,
+    envVars: {
+      hasTelegramToken: !!process.env.TELEGRAM_BOT_TOKEN,
+      hasTelegramChatId: !!process.env.TELEGRAM_CHAT_ID
+    }
+  });
+
   // Разрешаем только POST-запросы
   if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -20,11 +31,19 @@ export default async function handler(req, res) {
   }
 
   // Проверяем наличие переменных окружения
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
-    console.error('Ошибка: Отсутствуют переменные окружения TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID');
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_BOT_TOKEN.trim()) {
+    console.error('Ошибка: Отсутствует или пустая переменная окружения TELEGRAM_BOT_TOKEN');
     return res.status(500).json({ 
       success: false, 
-      error: 'Ошибка конфигурации сервера. Пожалуйста, свяжитесь с администратором.' 
+      error: 'Ошибка конфигурации сервера: отсутствует токен бота. Пожалуйста, свяжитесь с администратором.' 
+    });
+  }
+
+  if (!process.env.TELEGRAM_CHAT_ID || !process.env.TELEGRAM_CHAT_ID.trim()) {
+    console.error('Ошибка: Отсутствует или пустая переменная окружения TELEGRAM_CHAT_ID');
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка конфигурации сервера: отсутствует ID чата. Пожалуйста, свяжитесь с администратором.' 
     });
   }
 
@@ -36,6 +55,8 @@ export default async function handler(req, res) {
         error: 'Отсутствуют данные в запросе' 
       });
     }
+
+    console.log('Данные запроса:', req.body);
 
     const { name, phone, service, message } = req.body;
 
@@ -59,32 +80,74 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
 <i>Отправлено через форму на сайте</i>
 `.trim();
 
+    // Подготовка данных для отправки в Telegram
+    const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const telegramBody = {
+      chat_id: process.env.TELEGRAM_CHAT_ID,
+      text: messageText,
+      parse_mode: 'HTML'
+    };
+
+    console.log('Отправка запроса в Telegram:', {
+      url: telegramUrl.replace(process.env.TELEGRAM_BOT_TOKEN, 'HIDDEN_TOKEN'),
+      body: telegramBody
+    });
+
     // Отправляем сообщение в Telegram
-    const telegramResponse = await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: messageText,
-          parse_mode: 'HTML'
-        })
+    const telegramResponse = await fetch(telegramUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(telegramBody)
+    });
+
+    // Проверяем статус ответа
+    if (!telegramResponse.ok) {
+      const statusText = telegramResponse.statusText || 'Нет текста статуса';
+      console.error(`Ошибка HTTP при отправке в Telegram: ${telegramResponse.status} ${statusText}`);
+      
+      try {
+        // Пытаемся получить тело ответа для дополнительной информации
+        const errorBody = await telegramResponse.text();
+        console.error('Тело ответа с ошибкой:', errorBody);
+        
+        return res.status(500).json({
+          success: false,
+          error: `Ошибка при отправке в Telegram: HTTP ${telegramResponse.status} ${statusText}`,
+          details: errorBody
+        });
+      } catch (textError) {
+        return res.status(500).json({
+          success: false,
+          error: `Ошибка при отправке в Telegram: HTTP ${telegramResponse.status} ${statusText}`,
+          details: 'Не удалось получить детали ошибки'
+        });
       }
-    );
+    }
 
     // Получаем ответ от Telegram API
-    const telegramData = await telegramResponse.json();
+    let telegramData;
+    try {
+      telegramData = await telegramResponse.json();
+      console.log('Ответ от Telegram API:', telegramData);
+    } catch (jsonError) {
+      console.error('Ошибка при парсинге JSON ответа от Telegram:', jsonError);
+      return res.status(500).json({
+        success: false,
+        error: 'Получен некорректный ответ от Telegram API',
+        details: jsonError.message
+      });
+    }
 
     // Проверяем успешность отправки
     if (!telegramData.ok) {
       console.error('Ошибка Telegram API:', telegramData);
       return res.status(500).json({ 
         success: false, 
-        error: `Ошибка при отправке в Telegram: ${telegramData.description || 'Неизвестная ошибка'}` 
+        error: `Ошибка при отправке в Telegram: ${telegramData.description || 'Неизвестная ошибка'}`,
+        telegram_error: telegramData
       });
     }
 
@@ -98,7 +161,7 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
     console.error('Ошибка при обработке запроса:', error);
     return res.status(500).json({ 
       success: false, 
-      error: 'Произошла ошибка при обработке запроса' 
+      error: `Внутренняя ошибка сервера: ${error.message || 'Неизвестная ошибка'}` 
     });
   }
 }
