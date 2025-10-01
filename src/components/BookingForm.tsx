@@ -18,24 +18,30 @@ export function BookingForm() {
 
   // Функция для форматирования номера телефона в российском формате
   const formatPhoneNumber = (value: string) => {
+    // Если пользователь удаляет символы и поле становится пустым, возвращаем пустую строку
+    if (value === '') {
+      return '';
+    }
+    
     // Удаляем все нецифровые символы
-    const phoneNumber = value.replace(/\D/g, '');
+    let phoneNumber = value.replace(/\D/g, '');
+    
+    // Если номер начинается с 7 или 8, удаляем эту цифру, так как мы всегда добавляем +7
+    if (phoneNumber.startsWith('7') || phoneNumber.startsWith('8')) {
+      phoneNumber = phoneNumber.substring(1);
+    }
+    
+    // Ограничиваем длину до 10 цифр (без учета кода страны)
+    phoneNumber = phoneNumber.substring(0, 10);
     
     // Форматируем номер в российском формате
     if (phoneNumber.length === 0) {
-      return '';
-    } else if (phoneNumber.length === 1) {
-      // Если введена только одна цифра и это 7, то не добавляем префикс +7
-      if (phoneNumber === '7') {
-        return '+7 (';
-      } else {
-        return `+7 (${phoneNumber}`;
-      }
-    } else if (phoneNumber.length <= 4) {
-      return `+7 (${phoneNumber.slice(0, 3)}`;
-    } else if (phoneNumber.length <= 7) {
+      return '+7';
+    } else if (phoneNumber.length <= 3) {
+      return `+7 (${phoneNumber}`;
+    } else if (phoneNumber.length <= 6) {
       return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    } else if (phoneNumber.length <= 10) {
+    } else if (phoneNumber.length <= 8) {
       return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
     } else {
       return `+7 (${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 8)}-${phoneNumber.slice(8, 10)}`;
@@ -43,12 +49,6 @@ export function BookingForm() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Если пользователь удаляет символы и поле становится пустым, сбрасываем значение
-    if (e.target.value === '') {
-      setFormData({ ...formData, phone: '' });
-      return;
-    }
-    
     const formattedPhone = formatPhoneNumber(e.target.value);
     setFormData({ ...formData, phone: formattedPhone });
   };
