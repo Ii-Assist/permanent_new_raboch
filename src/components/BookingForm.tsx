@@ -68,6 +68,8 @@ export function BookingForm() {
       console.log('Отправка данных формы:', formData);
       
       // Отправляем запрос на API-эндпоинт
+      console.log('Отправка данных формы:', formData);
+      
       const response = await fetch("/api/send-telegram", {
         method: "POST",
         headers: {
@@ -77,10 +79,18 @@ export function BookingForm() {
         body: JSON.stringify(formData),
       });
 
-      // Обработка ответа
+      console.log('Получен ответ:', response.status, response.statusText);
+      console.log('Заголовки ответа:', Object.fromEntries(response.headers.entries()));
+      
+      // Получаем текст ответа для отладки
+      const responseText = await response.text();
+      console.log('Текст ответа:', responseText);
+      
+      // Парсим JSON из текста
       let responseData;
       try {
-        responseData = await response.json();
+        responseData = JSON.parse(responseText);
+        console.log('Данные ответа:', responseData);
       } catch (jsonError) {
         console.error('Ошибка при парсинге JSON:', jsonError);
         throw new Error('Не удалось обработать ответ сервера');
@@ -104,7 +114,17 @@ export function BookingForm() {
         setPrivacyAccepted(false);
       } else {
         // Ошибка от сервера
-        const errorMessage = responseData?.error || 'Произошла ошибка при отправке заявки';
+        let errorMessage = responseData?.error || 'Произошла ошибка при отправке заявки';
+        
+        // Добавляем детали ошибки, если они есть
+        if (responseData?.details) {
+          if (typeof responseData.details === 'object') {
+            errorMessage += ` (${JSON.stringify(responseData.details)})`;
+          } else {
+            errorMessage += ` (${responseData.details})`;
+          }
+        }
+        
         throw new Error(errorMessage);
       }
     } catch (error) {

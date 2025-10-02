@@ -93,6 +93,13 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
       body: telegramBody
     });
 
+    // Логируем данные для отладки
+    console.log('Отправка данных в Telegram:', {
+      token: process.env.TELEGRAM_BOT_TOKEN ? 'Токен установлен' : 'Токен отсутствует',
+      chatId: process.env.TELEGRAM_CHAT_ID,
+      messageLength: messageText.length
+    });
+
     // Отправляем сообщение в Telegram
     const telegramResponse = await fetch(telegramUrl, {
       method: 'POST',

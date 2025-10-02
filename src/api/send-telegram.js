@@ -59,24 +59,33 @@ export async function sendTelegramMessage(formData) {
       console.error("Ошибка Telegram API:", tgResponse.status, errorText);
       
       let errorMessage = "Ошибка Telegram API";
+      let errorDetails = {};
       try {
         // Пытаемся распарсить ответ как JSON
         if (errorText.trim().startsWith('{')) {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.description || errorMessage;
+          errorDetails = errorData;
         }
       } catch (e) {
         console.error("Не удалось распарсить ответ как JSON:", e);
       }
       
-      throw new Error(errorMessage);
+      throw new Error(JSON.stringify({
+        message: errorMessage,
+        details: errorDetails
+      }));
     }
     
     // Парсим JSON только для успешных ответов
     const responseData = await tgResponse.json();
     
     console.log("Сообщение успешно отправлено:", responseData);
-    return { ok: true };
+    return { 
+      success: true,
+      message: "Сообщение успешно отправлено",
+      result: responseData
+    };
   } catch (error) {
     console.error("Детали ошибки:", error.message);
     throw error;
