@@ -67,16 +67,18 @@ export function BookingForm() {
     try {
       console.log('Отправка данных формы:', formData);
       
-      // Отправляем запрос на API-эндпоинт
-      console.log('Отправка данных формы:', formData);
+      // Используем абсолютный URL для API-эндпоинта
+      const apiUrl = window.location.origin + "/api/send-telegram";
+      console.log('Отправка запроса на:', apiUrl);
       
-      const response = await fetch("/api/send-telegram", {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
         body: JSON.stringify(formData),
+        cache: "no-store"
       });
 
       console.log('Получен ответ:', response.status, response.statusText);
