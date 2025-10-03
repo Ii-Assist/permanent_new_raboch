@@ -12,7 +12,11 @@ export default function TelegramTest() {
     try {
       console.log('Отправка тестового сообщения...');
       
-      const response = await fetch('/api/send-telegram', {
+      // Используем абсолютный URL для API-эндпоинта
+      const apiUrl = window.location.origin + '/api/send-telegram';
+      console.log('Отправка запроса на:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -23,6 +27,7 @@ export default function TelegramTest() {
           phone: '+7 (999) 123-45-67',
           service: 'Тестовая услуга'
         }),
+        cache: 'no-store'
       });
       
       console.log('Получен ответ:', response.status, response.statusText);

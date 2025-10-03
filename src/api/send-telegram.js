@@ -5,8 +5,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export async function sendTelegramMessage(formData) {
-  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+  // Используем жестко заданные значения для отладки
+  const TELEGRAM_BOT_TOKEN = "8422402031:AAEa0HwWbQJbBrRhz-zEvlXseEkvGulz7aA";
+  const TELEGRAM_CHAT_ID = "936781211";
 
   // Проверка наличия переменных окружения
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {

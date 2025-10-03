@@ -30,22 +30,12 @@ export default async function handler(req, res) {
     });
   }
 
-  // Проверяем наличие переменных окружения
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_BOT_TOKEN.trim()) {
-    console.error('Ошибка: Отсутствует или пустая переменная окружения TELEGRAM_BOT_TOKEN');
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Ошибка конфигурации сервера: отсутствует токен бота. Пожалуйста, свяжитесь с администратором.' 
-    });
-  }
-
-  if (!process.env.TELEGRAM_CHAT_ID || !process.env.TELEGRAM_CHAT_ID.trim()) {
-    console.error('Ошибка: Отсутствует или пустая переменная окружения TELEGRAM_CHAT_ID');
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Ошибка конфигурации сервера: отсутствует ID чата. Пожалуйста, свяжитесь с администратором.' 
-    });
-  }
+  // Используем жестко заданные значения для отладки
+  const TELEGRAM_BOT_TOKEN = "8422402031:AAEa0HwWbQJbBrRhz-zEvlXseEkvGulz7aA";
+  const TELEGRAM_CHAT_ID = "936781211";
+  
+  console.log('Используем токен:', TELEGRAM_BOT_TOKEN);
+  console.log('Используем chat_id:', TELEGRAM_CHAT_ID);
 
   try {
     // Проверяем наличие тела запроса
@@ -81,33 +71,37 @@ ${message ? `<b>Сообщение:</b> ${message}` : ''}
 `.trim();
 
     // Подготовка данных для отправки в Telegram
-    const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const telegramBody = {
-      chat_id: process.env.TELEGRAM_CHAT_ID,
+      chat_id: TELEGRAM_CHAT_ID,
       text: messageText,
       parse_mode: 'HTML'
     };
 
     console.log('Отправка запроса в Telegram:', {
-      url: telegramUrl.replace(process.env.TELEGRAM_BOT_TOKEN, 'HIDDEN_TOKEN'),
+      url: telegramUrl.replace(TELEGRAM_BOT_TOKEN, 'HIDDEN_TOKEN'),
       body: telegramBody
     });
 
     // Логируем данные для отладки
     console.log('Отправка данных в Telegram:', {
-      token: process.env.TELEGRAM_BOT_TOKEN ? 'Токен установлен' : 'Токен отсутствует',
-      chatId: process.env.TELEGRAM_CHAT_ID,
+      token: TELEGRAM_BOT_TOKEN ? 'Токен установлен' : 'Токен отсутствует',
+      chatId: TELEGRAM_CHAT_ID,
       messageLength: messageText.length
     });
 
     // Отправляем сообщение в Telegram
+    console.log('Отправка запроса на URL:', telegramUrl.replace(TELEGRAM_BOT_TOKEN, 'HIDDEN_TOKEN'));
+    console.log('Тело запроса:', JSON.stringify(telegramBody));
+    
     const telegramResponse = await fetch(telegramUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(telegramBody)
+      body: JSON.stringify(telegramBody),
+      cache: 'no-store'
     });
 
     // Проверяем статус ответа

@@ -67,38 +67,56 @@ export function BookingForm() {
     try {
       console.log('Отправка данных формы:', formData);
       
-      // Используем абсолютный URL для API-эндпоинта
-      const apiUrl = window.location.origin + "/api/send-telegram";
-      console.log('Отправка запроса на:', apiUrl);
+      // Используем прямой URL для API Telegram
+      const telegramUrl = "https://api.telegram.org/bot8422402031:AAEa0HwWbQJbBrRhz-zEvlXseEkvGulz7aA/sendMessage";
+      console.log('Отправка запроса напрямую в Telegram:', telegramUrl);
       
-      const response = await fetch(apiUrl, {
+      // Формируем сообщение для Telegram
+      const messageText = `
+<b>Новая заявка с сайта!</b>
+
+<b>Имя:</b> ${formData.name}
+<b>Телефон:</b> ${formData.phone}
+<b>Услуга:</b> ${formData.service}
+${formData.message ? `<b>Сообщение:</b> ${formData.message}` : ''}
+
+<i>Отправлено через форму на сайте</i>
+`.trim();
+
+      const response = await fetch(telegramUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          chat_id: "936781211",
+          text: messageText,
+          parse_mode: "HTML"
+        }),
         cache: "no-store"
       });
 
       console.log('Получен ответ:', response.status, response.statusText);
       console.log('Заголовки ответа:', Object.fromEntries(response.headers.entries()));
       
-      // Получаем текст ответа для отладки
-      const responseText = await response.text();
-      console.log('Текст ответа:', responseText);
-      
-      // Парсим JSON из текста
+      // Проверяем ответ от Telegram API
       let responseData;
       try {
-        responseData = JSON.parse(responseText);
+        responseData = await response.json();
         console.log('Данные ответа:', responseData);
       } catch (jsonError) {
         console.error('Ошибка при парсинге JSON:', jsonError);
-        throw new Error('Не удалось обработать ответ сервера');
+        // Даже если не удалось распарсить JSON, но сообщение отправлено, считаем успешным
+        if (response.ok) {
+          responseData = { ok: true };
+        } else {
+          throw new Error('Не удалось обработать ответ сервера');
+        }
       }
       
-      if (response.ok && responseData.success) {
+      // Если ответ от Telegram API успешный (ok: true)
+      if (response.ok && (responseData.ok || responseData.success)) {
         // Успешная отправка
         toast({
           title: "Успех!",
